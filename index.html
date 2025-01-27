@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+       body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#start-screen, #end-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+button {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+canvas {
+    background: #333;
+}
+
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <h1>Welcome to Pong!<br><br><br> <img src="SporffLogo.png" alt="Sporff Logo" width="250" height="200"></h1>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <div id="game-container" style="display:none;">
+        <canvas id="pongCanvas" width="800" height="600"></canvas>
+        <div>Score: <span id="score">0</span></div>
+    </div>
+    <div id="end-screen" style="display:none;">
+        <h1>Game Over!</h1>
+        <p>Your score: <span id="final-score"></span></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+    <script>
+     const canvas = document.getElementById('pongCanvas');
+const ctx = canvas.getContext('2d');
+
+let ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 10, dx: 5, dy: 5 };
+let paddle = { width: 10, height: 100, x: 0, y: canvas.height / 2 - 50, dy: 8 };
+let score = 0;
+let isGameRunning = false; // Track if the game is running
+
+document.addEventListener('keydown', movePaddle);
+canvas.addEventListener('touchmove', movePaddleTouch); // Add touchmove event listener
+
+function movePaddle(e) {
+    if (isGameRunning) {
+        if (e.key === 'ArrowUp' && paddle.y > 0) paddle.y -= paddle.dy;
+        if (e.key === 'ArrowDown' && paddle.y < canvas.height - paddle.height) paddle.y += paddle.dy;
+    }
+}
+
+function movePaddleTouch(e) {
+    if (isGameRunning) {
+        const touch = e.touches[0]; // Get the first touch
+        const touchY = touch.clientY - canvas.offsetTop; // Get the y-coordinate of the touch relative to the canvas
+
+        if (touchY < paddle.y) {
+            paddle.y -= paddle.dy; // Move paddle up
+        } else if (touchY > paddle.y + paddle.height) {
+            paddle.y += paddle.dy; // Move paddle down
+        }
+    }
+}
+
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    isGameRunning = true;
+    draw();
+}
+
+function endGame() {
+    isGameRunning = false;
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = score;
+}
+
+function draw() {
+    if (isGameRunning) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBall();
+        drawPaddle();
+        checkCollision();
+
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
+        if (ball.x + ball.radius > canvas.width) ball.dx *= -1;
+
+        if (ball.x - ball.radius < paddle.width && ball.y > paddle.y && ball.y < paddle.y + paddle.height) {
+            ball.dx *= -1;
+            score++;
+            document.getElementById('score').innerText = score;
+        }
+
+        if (ball.x - ball.radius < 0) endGame();
+        requestAnimationFrame(draw);
+    }
+}
+
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.closePath();
+}
+
+function drawPaddle() {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+}
+
+function checkCollision() {
+    if (ball.x - ball.radius < 0) {
+        endGame();
+    }
+}
+
+
+    </script>
+</body>
+</html>
